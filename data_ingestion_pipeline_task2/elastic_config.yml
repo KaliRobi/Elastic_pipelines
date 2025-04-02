@@ -22,29 +22,95 @@
         get_url:
           url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
           dest: /tmp/elasticsearch.pgp
-        register: elk_download
+        register: download_result
+        until: download_result is succeeded
+        retries: 3
+        delay: 10  
+        
 
-      - name: configure repsository
+      - name: Convert GPG key to binary format
+        command: gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg /tmp/elasticsearch.pgp
+        args:
+          creates: /usr/share/keyrings/elasticsearch-keyring.gpg
+        
+
+      - name: Ensure Elasticsearch APT repository is configured
         apt_repository:
           repo: "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main"
           state: present
+          filename: elastic-8.x
 
-      - name: install elk componenets
+      - name: install elk components
         package:
           name:
             - elasticsearch
             - logstash
             - filebeat
-
+      
+      - name: create elasticsearch user 
+        user:
+          name: elasticsearch
+          comment: "Elasticsearch User"
+          system: yes
+          shell: /bin/false
+          home: /usr/share/elasticsearch
 
       - name: copy filebeat configuration
         copy:
           src: filebeat.yml.j2
-          dest: /etc/filebeat.yml
+          dest: /etc/filebeat/filebeat.yml
           mode: 0640
-          owner: root
-          group: filebeat
+          owner: elasticsearch
+          group: elasticsearch
+        notify: restart_filebeat
+
+      - name: copy the elasticsearch config
+        template:
+          src: elasticsearch.yml.j2
+          dest: /etc/elasticsearch/elasticsearch.yml
+          owner: elasticsearch
+          group: elasticsearch
+          mode: 0640
+        notify: restart_elasticsearch
+
+      - name: copy the mappings
+        template:
+          src: system_logs.json
+          dest: /etc/logstash/system_logs.json
+          owner: elasticsearch
+          group: elasticsearch
+          mode: 0640
+
+
+      - name: copy logstash configuration
+        template:
+          src: logstash.conf
+          dest: /etc/logstash/conf.d/logstash.conf
+          owner: elasticsearch
+          group: elasticsearch
+          mode: 0640
         notify: restart_logstash
+  
+  handlers:
+
+      - name: restart_elasticsearch
+        service:
+          name: elasticsearch
+          state: restarted
+          enabled: yes
+
+      - name: restart_logstash
+        service:
+          name: logstash
+          state: restarted
+          enabled: yes
+
+
+      - name: restart_filebeat
+        service:
+          name: filebeat
+          state: restarted
+          enabled: yes
 
 
       
