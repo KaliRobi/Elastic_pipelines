@@ -1,0 +1,5 @@
+all:
+    hosts:
+        systemctl_pipline:
+            ansible_host: systemctl_pipline
+            ansible_connection: docker

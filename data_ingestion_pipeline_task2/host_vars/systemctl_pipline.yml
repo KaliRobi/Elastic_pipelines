@@ -1,0 +1,10 @@
+log_location: syslog
+input_unique_id: "syslog-processing"
+
+es_cluster_name: syslog-cluster
+es_discovery_seeds: ["systemctl_pipline"]
+es_initial_master_nodes: ["systemctl_pipline"]
+es_node_name: "systemctl_pipline"
+es_network_host: 0.0.0.0
+
+

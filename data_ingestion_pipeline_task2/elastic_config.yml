@@ -1,0 +1,50 @@
+- name: arrange elastic configuration
+  hosts: all
+  tasks:
+
+
+      - name: install required packages
+        package:
+          name:
+            - apt-transport-https
+            - gnupg
+            - openjdk-11-jdk
+          state: present
+          update_cache: yes
+
+      - name: cretae the correct irectory
+        file:
+          path:  /usr/share/keyrings         
+          state: directory
+          mode: 0755
+
+      - name: download elastic gpg
+        get_url:
+          url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+          dest: /tmp/elasticsearch.pgp
+        register: elk_download
+
+      - name: configure repsository
+        apt_repository:
+          repo: "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main"
+          state: present
+
+      - name: install elk componenets
+        package:
+          name:
+            - elasticsearch
+            - logstash
+            - filebeat
+
+
+      - name: copy filebeat configuration
+        copy:
+          src: filebeat.yml.j2
+          dest: /etc/filebeat.yml
+          mode: 0640
+          owner: root
+          group: filebeat
+        notify: restart_logstash
+
+
+      

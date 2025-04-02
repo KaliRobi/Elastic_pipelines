@@ -1,0 +1,11 @@
+#Round 2 Challenge: Data Ingestion Pipeline
+
+#Your Task: Create an Ansible playbook that:
+
+#    Configures Logstash with a complete CSV processing pipeline
+
+#    Sets up Filebeat to ship sample log data
+
+#    Includes all necessary template files
+
+#    Ensures proper service dependencies
