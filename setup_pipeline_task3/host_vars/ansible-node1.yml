@@ -1,0 +1,7 @@
+es_cluster_name: minukluster
+es_discovery_seeds: ["minukluster"]
+es_initial_master_nodes: ["minukluster"]
+es_node_name: ansible_node1
+es_network_host: 0.0.0.0
+
+

@@ -1,0 +1,18 @@
+Task 1: Install Elasticsearch on a Linux Server using Ansible
+
+    Goal: Write an Ansible playbook to install Elasticsearch on a Linux server (e.g., Ubuntu, CentOS).
+
+    Steps:
+
+        Install Java (if necessary, as Elasticsearch requires it).
+
+        Add the Elasticsearch package repository to your system.
+
+        Install Elasticsearch using the package manager (e.g., apt for Ubuntu or yum for CentOS).
+
+        Configure Elasticsearch settings (e.g., cluster name, node settings) via the elasticsearch.yml file.
+
+        Start and enable Elasticsearch to run on system boot.
+
+        Verify the Elasticsearch service is running and accessible on port 9200.
+

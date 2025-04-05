@@ -1,0 +1,82 @@
+- name: arrange elastic configuration
+  hosts: all
+  tasks:
+
+      - name: instal prerequestist
+        package:
+          name:
+            - curl
+            - nano
+            - openjdk-11-jdk
+            - gnupg
+            - apt-transport-https
+          state: present
+          update_cache: yes
+
+      - name: create directory
+        file:
+          path: /usr/share/keyrings
+          mode: 0755
+          state: directory
+
+      - name: get pgp
+        get_url:
+          url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+          dest: /tmp/elasticsearch.pgp
+        register: download
+        until: download is succeeded
+        retries: 3
+        delay: 5
+
+      - name: convert pgp to binary format
+        command: gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg /tmp/elasticsearch.pgp
+        args:
+              creates: /usr/share/keyrings/elasticsearch-keyring.gpg
+
+      
+      - name: Ensure Elasticsearch APT repository is configured
+        apt_repository:
+          repo: "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main"
+          state: present
+          filename: elastic-8.x
+
+      - name: install elk
+        package:
+          name:
+            - elasticsearch
+          state: present
+
+      - name: setup  config
+        template:
+          src: elasticsearch.yml.j2
+          dest: /etc/elasticsearch/elasticsearch.yml
+          owner: elasticsearch
+          group: elasticsearch
+          mode: 0640
+        notify: restart service {{ item }}
+        with_items:
+          - elasticsearch 
+
+
+      - name: check if elasticsearch is available
+        uri:
+          url: http://localhost:9200
+          method: GET
+          timeout: 10
+          return_content: yes
+        register: available_service
+        failed_when: available_service.status != 200
+
+      - name: Print the availability message
+        debug:
+          msg: "elasticsearch is available: {{ available_service.status == 200 }}"
+
+  handlers:
+     - name: restart service
+       service:
+         name: "{{ item }}"
+         state: restarted
+         enabled: yes
+
+
+

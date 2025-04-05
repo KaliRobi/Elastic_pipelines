@@ -1,0 +1,7 @@
+all:
+  hosts:
+    host5:                   
+      ansible_host: 192.168.1.39   
+      ansible_user: user          
+      ansible_password: 123 
+        
